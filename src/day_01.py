@@ -29,5 +29,5 @@ def get_calories_list(data_file:Path):
 c = get_calories_list(Path("data/day_01.data"))
 
 print("Max calories carried:", max(c))
-print("Carried by gnome no:", c.index(max(c)))
+print("Gnome carying the most calories:", c.index(max(c)))
 print("Sum of calories carried by the three gnomes with most calories:", sum(sorted(c)[-3:]))
