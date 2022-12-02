@@ -26,7 +26,7 @@ def get_calories_list(data_file:Path):
     
     return calories
 
-c = get_calories_list(Path("data/day_01.data"))
+c = get_calories_list(Path("data/day_01.txt"))
 
 print("Max calories carried:", max(c))
 print("Elf carying the most calories:", c.index(max(c)))
