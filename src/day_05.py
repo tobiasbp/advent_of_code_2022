@@ -19,7 +19,6 @@ def move_crates(data_file:Path, crane_model: int):
     crates = []
     commands = []
 
-    
     # Parse the data into commands and crate positions
     for line in data:
         if "move" in line.lower():
@@ -49,6 +48,9 @@ def move_crates(data_file:Path, crane_model: int):
     for c in commands:
         # Crates to move from source
         crates_to_move = crates[c["source"]-1][:c["no_of_crates"]]
+        # If the crane model is 9000, we can only move one
+        # crate at a time. This means the ordering of the crates
+        # will be reversed in the destination collumn
         if crane_model == 9000:
             crates_to_move = list(reversed(crates_to_move))
         # Remove crates from source
