@@ -5,6 +5,7 @@ Solution to https://adventofcode.com/2022/day/7
 """
 
 from pathlib import Path
+from math import inf
 
 class FileSystem:
     def __init__(self):
@@ -20,6 +21,7 @@ class Directory:
 
     def add(self, object):
         assert object.name not in [ o.name for o in self.content ], f"Object with name {object.name} already in dir {self.name}"
+        assert isinstance(object.size, int)
         object.parent = self
         self.content.append(object)
 
@@ -42,6 +44,8 @@ class Directory:
 
     @property
     def size(self):
+        assert isinstance(self.content, list)
+        #print(self.content)
         return sum([ o.size for o in self.content ])
 
     def __str__(self):
@@ -49,7 +53,7 @@ class Directory:
 
 class File:
 
-    def __init__(self, name:str, size:int, parent=None):
+    def __init__(self, name:str, size:int):
         self.name = name
         self.size = int(size)
     
@@ -93,9 +97,6 @@ def get_file_system(data_file:Path):
             dirs.append(d)
         else:
             raise ValueError("Could not parse line:", line)
-        #print(line)
-        #print("cwd:", cwd, cwd.size)
-        #print([ str(o) for o in cwd.content])
 
     return root, dirs
 
@@ -105,7 +106,7 @@ def get_sum_of_dirs(dirs, limit:int):
     """
     return sum([ d.size for d in dirs if d.size <= limit ])
 
-# Test parser with example
+# Test parser with example data
 root_test, dirs_test = get_file_system(Path("data/day_07_test.txt"))
 assert root_test.size == 48381165
 assert root_test.get_by_name("a").size == 94853
@@ -114,10 +115,15 @@ assert root_test.get_by_name("a").get_by_name("e").size == 584
 assert len(dirs_test) == 3
 assert get_sum_of_dirs(dirs_test, 100000) == 95437
 
-
+# The actual solutions
 root, dirs = get_file_system(Path("data/day_07.txt"))
+print("Size of fs:", root.size)
+print("Free space on disk:", free_space := (70000000 - root.size))
 print("No of dirs in fs:", len(dirs))
-print("Sum of dirs below 100000 bytes:", sum := get_sum_of_dirs(dirs, 100000))
+print("Sum of dirs below 100000 bytes:", sum_of_dirs := get_sum_of_dirs(dirs, 100000))
+assert sum_of_dirs == 1432936
 
-assert sum == 1432936
-
+needed_space = 30000000
+# Sorted list of all dirs big enough to get us the needed size of deleted
+dirs_by_size = sorted([ d.size for d in dirs if (d.size + free_space) >= needed_space ])
+print("Size of smallest dir to delete:", dirs_by_size[0])
