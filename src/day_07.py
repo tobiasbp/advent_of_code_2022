@@ -6,6 +6,11 @@ Solution to https://adventofcode.com/2022/day/7
 
 from pathlib import Path
 
+class FileSystem:
+    def __init__(self):
+        self.root = Directory("")
+        self.cwd = self.root
+
 class Directory:
 
     def __init__(self, name:str, parent=None):
@@ -61,9 +66,13 @@ def get_file_system(data_file:Path):
     # We always start at the root of the fs
     assert data[0] == "$ cd /"
 
+    # All the dirs in the filesystem
+    dirs = []
+
     # Current working directory
     root = Directory("root")
     cwd = root
+    #fs = FileSystem()
 
     for line in data[1:-1]:
         c = line.split()
@@ -79,18 +88,36 @@ def get_file_system(data_file:Path):
         elif c[0].isdigit():
             cwd.add(File(name=c[1], size= c[0]))
         elif c[0] == "dir":
-            cwd.add(Directory(name=c[1]))
+            d = Directory(name=c[1])
+            cwd.add(d)
+            dirs.append(d)
         else:
             raise ValueError("Could not parse line:", line)
         #print(line)
         #print("cwd:", cwd, cwd.size)
         #print([ str(o) for o in cwd.content])
 
-    return root
+    return root, dirs
+
+def get_sum_of_dirs(dirs, limit:int):
+    """
+    Get the sum of dirs no larger than argument limit
+    """
+    return sum([ d.size for d in dirs if d.size <= limit ])
 
 # Test parser with example
-root_test = get_file_system(Path("data/day_07_test.txt"))
+root_test, dirs_test = get_file_system(Path("data/day_07_test.txt"))
 assert root_test.size == 48381165
 assert root_test.get_by_name("a").size == 94853
 assert root_test.get_by_name("d").size == 24933642
 assert root_test.get_by_name("a").get_by_name("e").size == 584
+assert len(dirs_test) == 3
+assert get_sum_of_dirs(dirs_test, 100000) == 95437
+
+
+root, dirs = get_file_system(Path("data/day_07.txt"))
+print("No of dirs in fs:", len(dirs))
+print("Sum of dirs below 100000 bytes:", sum := get_sum_of_dirs(dirs, 100000))
+
+assert sum == 1432936
+
