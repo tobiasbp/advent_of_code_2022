@@ -25,45 +25,39 @@ def get_visibility_map(row):
 def get_viewing_distance(row):
     """
     Return a list of visibility for the trees in row.
+    Trees on edge has a score of 0.
     """
     dist_map = [0]
 
-    print(row)
     # Run through non edge trees
     for i in range(1, len(row)-1):
         l = row[:i]
         r = row[i+1:]
 
+        # Number of visible trees to the left
         v_l = 0
         for h in reversed(l):
             v_l += 1
             if h >= row[i]:
                 break
 
+        # Number of visible trees to the right
         v_r = 0
         for h in r:
             v_r += 1
             if h >= row[i]:
                 break
 
-        """
-        print(l, r)
-        print("My height:", row[i])
-        print("Visi_l", v_l)
-        print("Visi_r", v_r)
-        """
+        # The visibility score for current tree
         dist_map.append(v_l * v_r)
 
-        """
-        if min(max(row[:i]), max(row[i+1:])) < row[i]:
-            v_map.append(1)
-        else:
-            v_map.append(0)
-
-        """
     return dist_map + [0]
 
-def get_no_of_visible_trees(data_file:Path):
+def evaluate_forest(data_file:Path):
+    """
+    Return number of visible trees in forest
+    Return best viewing distance
+    """
 
     visible_trees = 0
     best_viewing_distance = 0
@@ -99,11 +93,11 @@ def get_no_of_visible_trees(data_file:Path):
 
     return visible_trees, best_viewing_distance
 
-t_trees, t_dist = get_no_of_visible_trees(Path("data/day_08_test.txt"))
+t_trees, t_dist = evaluate_forest(Path("data/day_08_test.txt"))
 assert t_trees == 21
 assert t_dist == 8
 
-trees, dist = get_no_of_visible_trees(Path("data/day_08.txt"))
+trees, dist = evaluate_forest(Path("data/day_08.txt"))
 print("No of visible trees:", trees)
 print("Best distance:", dist)
 
