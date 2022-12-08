@@ -8,10 +8,8 @@ from pathlib import Path
 
 def get_visibility_map(row):
     """
-    Return a list matching length of row.
     Return a list of visibility as seen from the
-    left (start) of the list. 1 is visible,
-    0 is invisible.
+    either end of the row. 1 is visible, 0 is invisible.
     """
     v_map = [1]
 
@@ -21,66 +19,93 @@ def get_visibility_map(row):
             v_map.append(1)
         else:
             v_map.append(0)
-        #print(row[:i+1])
 
     return v_map + [1]
+
+def get_viewing_distance(row):
+    """
+    Return a list of visibility for the trees in row.
+    """
+    dist_map = [0]
+
+    print(row)
+    # Run through non edge trees
+    for i in range(1, len(row)-1):
+        l = row[:i]
+        r = row[i+1:]
+
+        v_l = 0
+        for h in reversed(l):
+            v_l += 1
+            if h >= row[i]:
+                break
+
+        v_r = 0
+        for h in r:
+            v_r += 1
+            if h >= row[i]:
+                break
+
+        """
+        print(l, r)
+        print("My height:", row[i])
+        print("Visi_l", v_l)
+        print("Visi_r", v_r)
+        """
+        dist_map.append(v_l * v_r)
+
+        """
+        if min(max(row[:i]), max(row[i+1:])) < row[i]:
+            v_map.append(1)
+        else:
+            v_map.append(0)
+
+        """
+    return dist_map + [0]
 
 def get_no_of_visible_trees(data_file:Path):
 
     visible_trees = 0
+    best_viewing_distance = 0
 
     # Read data from data file
     data = [ l for l in data_file.read_text().split("\n") if l ]
 
     size = len(data[0])
-    # A matrix af tree visibility.
+
+    # Tree visibility
     # 0 = invisible, 1 = visible
     v_map_rows = []
     v_map_cols = []
-    v_map = size * [size * [0]]
 
+    d_map_rows = []
+    d_map_cols = []
+
+    # Evaluate rows
     for row in data:
         v_map_rows.append(get_visibility_map(row))
+        d_map_rows.append(get_viewing_distance(row))
 
+    # Evaluate collumns
     for col in zip(*data):
         v_map_cols.append(get_visibility_map(col))
-
-    #v_map_colsff = list(zip(*v_map_cols))
+        d_map_cols.append(get_viewing_distance(col))
 
     for row in range(size):
         for col in range(size):
 
-            r_v = v_map_rows[row][col]
-            c_v = v_map_cols[col][row]
-            visible_trees += max(r_v, c_v)
-            """
-            print("r,c:", row, col, "rows_v:", r_v , "cols_v:", c_v, "visible:", foo := max(r_v, c_v) )
-            print("foo:", foo)
+            visible_trees += max(v_map_rows[row][col], v_map_cols[col][row])
+            best_viewing_distance = max( best_viewing_distance, d_map_rows[row][col] * d_map_cols[col][row])
 
-            #print("r:", v_map_rows[row][col])
-            #print("c:", v_map_cols[col][row])
+    return visible_trees, best_viewing_distance
 
-            v_map[row][col] = foo
-            print("loop:", v_map)
-            """
-        #print("\n")
-    
-    print("rows:", v_map_rows)
-    print("cols:", v_map_cols)
-    #print("colsT:", v_map_colsff)
+t_trees, t_dist = get_no_of_visible_trees(Path("data/day_08_test.txt"))
+assert t_trees == 21
+assert t_dist == 8
 
-    for l in data:
-        print(l)
-    for r in v_map:
-        print(r)
-    return visible_trees
+trees, dist = get_no_of_visible_trees(Path("data/day_08.txt"))
+print("No of visible trees:", trees)
+print("Best distance:", dist)
 
-
-assert get_no_of_visible_trees(Path("data/day_08_test.txt")) == 21
-
-print("No of visible trees (1/2):", vt := get_no_of_visible_trees(Path("data/day_08.txt")))
-assert vt == 1700
-#print("Score (2/2):", s2 := calculate_rps_score(Path("data/day_02.txt"), 2))
-
-#assert s1 == 14297
-#assert s2 == 10498
+assert trees == 1700
+assert dist == 470596
