@@ -14,12 +14,11 @@ def get_values_for_x(data_file:Path, cycles_of_interest):
     # Read data from data file
     data = [ l for l in data_file.read_text().split("\n") if l ]
 
-    #cycle = 0
     x = 1
 
     # History of the value of x.
-    # Entries are for the value of x after index 
-    history = []
+    # Value is value of x during cycle no (starting at 0) 
+    history = [x]
 
     for line in data:
         if line == "noop":
@@ -33,20 +32,27 @@ def get_values_for_x(data_file:Path, cycles_of_interest):
         else:
             raise ValueError("Unknown command:", line)
 
-    #for i, v in enumerate(history):
-    #    print(f"Cycle {i+1}: {v}")
+    # Render screen as one long line
+    screen = ""
+    for cycle_no, x in enumerate(history):
+        line_pos = cycle_no%40
+        if line_pos in [ x-1, x , x+1 ]:
+            screen += "#"
+        else:
+            screen += "."
+
+    # Display screen as lines of 40 characters
+    for line_no in range(6):
+        print(screen[line_no*40: line_no*40 + 40])
+ 
     sum_of_frequencies = 0
     for c in cycles_of_interest:
-        print(c, ":", history[c-2])
-        sum_of_frequencies += c * history[c-2]
+        # input frequencies has 1 as first cycle, but we have 0, so adjust by -1
+        sum_of_frequencies += c * history[c-1]
     return sum_of_frequencies
 
 
 assert get_values_for_x(Path("data/day_10_test.txt"), [20, 60, 100, 140, 180, 220]) == 13140
-
+print()
 assert get_values_for_x(Path("data/day_10.txt"), [20, 60, 100, 140, 180, 220]) == 17940
 
-#assert get_no_of_positions(Path("data/day_09_test.txt"), 2) == 13
-#assert get_no_of_positions(Path("data/day_09_test.txt"), 10) == 1
-
-#print("No of unique positions visited by tail:", np := get_no_of_positions(Path("data/day_09.txt")))
