@@ -4,8 +4,10 @@
 Solution to https://adventofcode.com/2022/day/11
 """
 
-from pathlib import Path
 import operator
+import cProfile
+
+from pathlib import Path
 from math import prod
 
 ops = {
@@ -21,6 +23,8 @@ class Monkey:
         self.test_true_dest = None
         self.test_false_dest = None
         self.no_of_items_inspected = 0
+        self.worry_divisor = None
+        self.product_of_divisors = None
 
     def operation(self, item_value):
         if self.v2 == "old":
@@ -38,12 +42,10 @@ class Monkey:
             return None, None
 
         item_value = self.inventory.pop(0)
-        #print("Orig val:", item_value)
         item_value = self.operation(item_value)
-        #print("val after operation:", item_value)
-        item_value = item_value // 3
+        item_value = item_value // self.worry_divisor
         self.no_of_items_inspected += 1
-        #print("val // 3:", item_value)
+        item_value = item_value % self.product_of_divisors
         if item_value % self.divisible_by == 0:
             return self.test_true_dest, item_value
         else:
@@ -52,7 +54,7 @@ class Monkey:
     def recieve(self, item_value):
         self.inventory.append(item_value)
 
-def setup_monkeys(data_file:Path):
+def setup_monkeys(data_file:Path, worry_divisor: int):
     """
     """
     # Read data from data file
@@ -62,7 +64,9 @@ def setup_monkeys(data_file:Path):
 
     for line in data:
         if line[:6] == "Monkey":
-            monkeys.append(Monkey())
+            m = Monkey()
+            m.worry_divisor = worry_divisor
+            monkeys.append(m)
         # Add items to monkey
         if "Starting items" in line:
             monkeys[-1].inventory =  [ int(item) for item in line[18:].replace(" ", "").split(",") ]
@@ -79,37 +83,34 @@ def setup_monkeys(data_file:Path):
             monkeys[-1].operator = ops[op]
             monkeys[-1].v2 = v2
 
+    # Monkey need to now product of divisors for efficiency
+    product_of_divisors = prod([ m.divisible_by for m in monkeys ])
+    for m in monkeys:
+        m.product_of_divisors = product_of_divisors
 
-    #print("refcount:", getrefcount(v2))
     return monkeys
 
 def play(monkeys, rounds):
 
     for r in range(rounds):
         for m in monkeys:
-            #print("Inventory:", m.inventory)
-            #print("Divisible by:", m.divisible_by)
-            #print("Test True:", m.test_true_dest)
-            #print("Test False:", m.test_false_dest)
-            #print("Operation:", m.operation)
-            #for i in range(len(m.inventory)):
+            # Monkey throws all items it has
             while len(m.inventory) > 0:
                 recepient, item_value = m.throw()
+                #print(item_value)
                 if recepient is None:
                     continue
                 else:
                     monkeys[recepient].inventory.append(item_value)
-                #print(m[recepient])
-                #print("Throw:", m.throw())
-            #print("---")
-    
-    #for i, m in enumerate(monkeys):
-    #    print(f"Monkey {i}: {m.no_of_items_inspected}")
-    
+
+    for i, no_of_items_inspected in enumerate([ m.no_of_items_inspected for m in monkeys ]):
+        print(f"Monkey {i}: {no_of_items_inspected}")
+
+    # Product of no of items trown by top two most active monkeys    
     return prod(sorted([ m.no_of_items_inspected for m in monkeys ])[-2:])
     
 
-m = setup_monkeys(Path("data/day_11_test.txt"))
+m = setup_monkeys(Path("data/day_11_test.txt"), 3)
 assert len(m) == 4
 assert m[0].inventory == [79, 98]
 assert m[1].inventory == [54, 65, 75, 74]
@@ -126,9 +127,17 @@ assert m[1].operation(10) == 16
 assert m[2].operation(10) == 100
 assert m[3].operation(10) == 13
 
-print("Monkey business (test):", mb := play(m, 20))
-assert mb == 10605
+print("Monkey business (wd=3, test):", mb_t_wd3 := play(m, 20))
+assert mb_t_wd3 == 10605
 
-m = setup_monkeys(Path("data/day_11.txt"))
-print("Monkey business (test):", mb := play(m, 20))
-assert mb == 66124
+m = setup_monkeys(Path("data/day_11_test.txt"), 1)
+print("Monkey business (wd=1, test):", mb_t_wd1 := play(m, 10000))
+assert mb_t_wd1 == 2713310158
+
+m = setup_monkeys(Path("data/day_11.txt"), 3)
+print("Monkey business (wd=3):", mb_wd3 := play(m, 20))
+assert mb_wd3 == 66124
+
+m = setup_monkeys(Path("data/day_11.txt"), 1)
+print("Monkey business (wd=1):", mb_wd1 := play(m, 10000))
+assert mb_wd1 == 19309892877
